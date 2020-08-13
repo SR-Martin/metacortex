@@ -83,7 +83,7 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
     void traversal_for_contigs(dBNode * node) 
     {
         uint32_t coverage = element_get_coverage_all_colours(node);     
-        //if(coverage >= graph->path_coverage_minimum)
+        if(coverage >= graph->path_coverage_minimum)
         {
             
             dBNode* seed_node = NULL;
@@ -110,6 +110,7 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                 {
                     
                     //debug hist
+
 /*
                     char* filename;
                     asprintf(&filename, "node_%qd.hist", simple_path->id);
@@ -122,12 +123,14 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                         uint32_t coverage = element_get_coverage_all_colours(current_node);
                         int num_edges = db_node_edges_count_all_colours(current_node, current_orientation);
                         int diff = coverage - last_coverage;
-                        float normalised = (float)diff/last_coverage;
+                        int denominator = coverage > last_coverage ? coverage : last_coverage;
+                        float normalised = (float)diff/denominator;
                         fprintf(hist_file, "%u\t%f\t%i\n", coverage, normalised, num_edges);
                         last_coverage = coverage;
                     }
                     fclose(hist_file);
 */
+
                     path_to_fasta(simple_path, fp_contigs_fasta);
                 }
                     
@@ -153,12 +156,13 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     dBNode* current_node = simple_path->nodes[i];
                     uint32_t cov = element_get_coverage_all_colours(current_node);
                     int diff = cov - last_cov;
-                    float delta = (float)diff/last_cov;
-                    if(diff > delta_coverage)
+                    int denominator = cov > last_cov ? cov : last_cov;
+                    float delta = (float)diff/denominator;
+                    if(delta > delta_coverage)
                     {
                         current_level++;
                     }
-                    else if(diff < -delta_coverage && current_level > 1)
+                    else if(delta < -delta_coverage && current_level > 1)
                     {
                         current_level--;
                     }
@@ -172,12 +176,13 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     dBNode* current_node = simple_path->nodes[i];
                     uint32_t cov = element_get_coverage_all_colours(current_node);
                     int diff = cov - last_cov;
-                    float delta = (float)diff/last_cov;
-                    if(diff > delta_coverage)
+                    int denominator = cov > last_cov ? cov : last_cov;
+                    float delta = (float)diff/denominator;
+                    if(delta > delta_coverage)
                     {
                         current_level++;
                     }
-                    else if(diff < -delta_coverage && current_level > 1)
+                    else if(delta < -delta_coverage && current_level > 1)
                     {
                         current_level--;
                     }

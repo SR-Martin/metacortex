@@ -505,8 +505,9 @@ int main(int argc, char **argv)
                 break;
             case SUBTRACTIVE_WALK:
 
-                log_and_screen_printf("\nPerforming iterative subtractive walk..\n");       
-                subtractive_walk(db_graph, cmd_line.output_fasta_filename, cmd_line.min_contig_length, cmd_line.delta_coverage);
+                log_and_screen_printf("\nPerforming iterative subtractive walk..\n");
+                log_and_screen_printf("Using value %f for determining covering variants.\n", cmd_line.subtractive_walk_delta); 
+                subtractive_walk(db_graph, cmd_line.output_fasta_filename, cmd_line.min_contig_length, cmd_line.subtractive_walk_delta);
                 break;
                 
             default:

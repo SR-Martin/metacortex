@@ -162,6 +162,7 @@ int default_opts(CmdLine * c)
     //c->node_coverage_threshold required
     c->max_node_edges = 9; //TODO
     c->delta_coverage = 100; //TODO
+    c->subtractive_walk_delta = 1.0;
     c->linked_list_max_size = 0; //TODO
     c->tip_length = 100; //TODO
     c->tip_clip_iterations = 100;
@@ -241,11 +242,12 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
         {"threads", required_argument, NULL, 'T'},
         {"subtractive_walk", no_argument, NULL, 'U'},
         {"graphviz", required_argument, NULL, 'V'},
+        {"SW_delta", required_argument, NULL, 'W'},
         {0, 0, 0, 0}
     };
 
     while ((opt = getopt_long(argc, argv,
-                              "ab:c:d:ef:g:hi:jk:l:m:n:o:p:q:r:s:t:uvw:x:y:z:A:B:C:D:E:FGH:I:J:K:L:MN:O:P:R:STUV:Z:",
+                              "ab:c:d:ef:g:hi:jk:l:m:n:o:p:q:r:s:t:uvw:x:y:z:A:B:C:D:E:FGH:I:J:K:L:MN:O:P:R:STUV:W:Z:",
                               long_options, &longopt_index)) > 0)
     {
         //Parse the default options
@@ -654,6 +656,15 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
                printf("Reference file: %s\n", optarg);
 			   cmd_line.input_reference_known = true;
                break;
+            case 'W':	//SW_delta
+                if (optarg == NULL) {
+                    errx(1, "[-W | --SW_delta FLOAT] option requires float argument");
+                }
+                cmd_line.subtractive_walk_delta = atof(optarg);
+                if (cmd_line.subtractive_walk_delta < 0 || cmd_line.subtractive_walk_delta > 1 ) {
+                    errx(1, "[-W | --SW_delta FLOAT] must be between 0 and 1.");
+                }
+                break;
             case 'Z'://max read length --> use by the parser to read fasta/fastq files.
                 if (optarg==NULL) {
                     errx(1,"[-Z | --max_read_len] option requires int argument [maximum read length in input]");

@@ -136,6 +136,7 @@ typedef struct
     int node_coverage_threshold;
     int max_node_edges;
     float delta_coverage;
+    float subtractive_walk_delta;
     int linked_list_max_size;
     int tip_length;
     int remove_low_coverage_supernodes_threshold;

@@ -78,6 +78,8 @@
 #include "dB_graph.h"
 #include "gfa_segment.h"
 
+int fastg_recursion_level;
+
 Path *path_new(int max_length, short kmer_size)
 {
     Path *path = calloc(1, sizeof(Path));

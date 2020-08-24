@@ -476,8 +476,6 @@ out_struct write_paths_between_nodes(Path* path, int start_pos, int end_pos, Has
 
 void path_to_gfa2_and_fastg(Path* path, HashTable* graph, FILE* file_gfa, FILE* file_fastg);
 
-int fastg_recursion_level;
-
 typedef struct
 {
     int m_join_pos;

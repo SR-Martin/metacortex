@@ -92,15 +92,21 @@ Queue* queue_new(int n, size_t item_size)
         exit(1);
     }
 	q->number_of_items = 0;
+        q->warn_queue_full = false;
 	return q;
 }
 
 void* queue_push(Queue* q, void* item)
 {
-	if (q->number_of_items == q->max_size) {
-        printf("Reached max items %d of size %d\n", q->number_of_items, q->max_size);
-		return NULL;
-	}
+    if (q->number_of_items == q->max_size) 
+    {
+        if(!q->warn_queue_full)
+        {
+            printf("Reached max items %d of size %d\n", q->number_of_items, q->max_size);
+            q->warn_queue_full = true;
+        }		
+        return NULL;
+    }
 
     q->items[q->number_of_items++] = item;
 

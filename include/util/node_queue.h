@@ -22,6 +22,7 @@ typedef struct {
 	int head;
 	int tail;
 	void** items;
+        boolean warn_queue_full;
 } Queue;
 
 /*----------------------------------------------------------------------*

@@ -109,28 +109,6 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                 if(simple_path->length > min_path_size)
                 {
                     
-                    //debug hist
-
-/*
-                    char* filename;
-                    asprintf(&filename, "node_%qd.hist", simple_path->id);
-                    FILE* hist_file = fopen(filename, "w");
-                    int last_coverage = 0;
-                    for(int n = 0; n < simple_path->length; n++)
-                    {
-                        dBNode* current_node = simple_path->nodes[n];
-                        Orientation current_orientation = simple_path->orientations[n];
-                        uint32_t coverage = element_get_coverage_all_colours(current_node);
-                        int num_edges = db_node_edges_count_all_colours(current_node, current_orientation);
-                        int diff = coverage - last_coverage;
-                        int denominator = coverage > last_coverage ? coverage : last_coverage;
-                        float normalised = (float)diff/denominator;
-                        fprintf(hist_file, "%u\t%f\t%i\n", coverage, normalised, num_edges);
-                        last_coverage = coverage;
-                    }
-                    fclose(hist_file);
-*/
-
                     path_to_fasta(simple_path, fp_contigs_fasta);
                 }
                     
@@ -147,6 +125,8 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     }
                 }
                 int levels [simple_path->length];
+                float deltas [simple_path->length];
+                float gc_content [simple_path->length];
 
                 int current_level = 1;
                 levels[min_index] = current_level;
@@ -158,6 +138,7 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     int diff = cov - last_cov;
                     int denominator = cov > last_cov ? cov : last_cov;
                     float delta = (float)diff/denominator;
+                    deltas[i] = delta;
                     if(delta > delta_coverage)
                     {
                         current_level++;
@@ -178,6 +159,7 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     int diff = cov - last_cov;
                     int denominator = cov > last_cov ? cov : last_cov;
                     float delta = (float)diff/denominator;
+                    deltas[i] = delta;
                     if(delta > delta_coverage)
                     {
                         current_level++;
@@ -189,31 +171,82 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     levels[i] = current_level;
                     last_cov = cov;
                 }
+                
+                
+                //debug hist
+                /*
+                if(simple_path->length > 100000)
+                {
+                    char* filename;
+                    asprintf(&filename, "node_%qd.hist", simple_path->id);
+                    FILE* hist_file = fopen(filename, "w");
+                    int last_coverage = 0;
+                    for(int n = 0; n < simple_path->length; n++)
+                    {
+                        dBNode* current_node = simple_path->nodes[n];
+                        Orientation current_orientation = simple_path->orientations[n];
+                        uint32_t coverage = element_get_coverage_all_colours(current_node);
+                        int num_edges = db_node_edges_count_all_colours(current_node, current_orientation);
+                        fprintf(hist_file, "%u\t%f\t%i\t%i\n", coverage, deltas[n], levels[n], num_edges);
+                        last_coverage = coverage;
+                    }
+                    fclose(hist_file);
+                }
+                */
 
                 //Now subtract the coverages:
                 // level 1 -> 0
                 // all others get reduced by last min_cov;
                 last_cov = min_cov;
-                for(int i = 0; i < simple_path->length; i++)
+                int i = 0;
+                while( i < simple_path->length)
                 {
                     dBNode* current_node = simple_path->nodes[i];
                     if(levels[i] == 1)
                     {
                         last_cov = element_get_coverage_all_colours(current_node);
-                        current_node->coverage[0] = 0;                          
+                        current_node->coverage[0] = 0;
+                        i++;
                     }
                     else
                     {
-                        if(current_node->coverage[0] >= last_cov)
+                        // subtract an amount from the nodes with more then 1 covering
+                        // variant. The amount to subtract is a lerp between the
+                        // last level 1 and the next level 1.
+                        int j = i + 1;
+                        while(j < simple_path->length && levels[j] > 1)
                         {
-                            current_node->coverage[0] -= last_cov;
+                            j++;
                         }
-                        else
+                        int next_cov = last_cov;
+                        if( j < simple_path->length)
                         {
-                            current_node->coverage[0] = 0;
+                            next_cov = element_get_coverage_all_colours(simple_path->nodes[j]);
                         }
+                        if( i == 0 )
+                        {
+                            last_cov = next_cov;
+                        }
+                        
+                        int diff = j - i;
+                        int increment = (next_cov - last_cov) / diff;
+                        for(int k = i; k < j; k++)
+                        {
+                            current_node = simple_path->nodes[k];
+                            int subtract = last_cov + ((k-i) * increment);
+                            if(current_node->coverage[0]  > subtract)
+                            {
+                                current_node->coverage[0] -= subtract;
+                            }
+                            else
+                            {
+                                current_node->coverage[0] = 0;
+                            }                           
+                        }
+                        i = j;
                     }
-                }              
+                }
+             
                 /* Reset paths */
                 path_reset(simple_path);
                // path_reset(path_fwd);

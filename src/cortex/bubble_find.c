@@ -1093,7 +1093,7 @@ int db_graph_found_matched_paths(PathArray * patharray, int max_length, Orientat
 				for (j = strlen(stats_string); j >= 0; j--) {
 					stats_string[j + strlen(message)] = stats_string[j];
                 }
-				strncpy(stats_string, message, strlen(message));
+				strncpy(stats_string, message, strlen(message) + 1);
 			}
 
 			merged_path->header = stats_string;

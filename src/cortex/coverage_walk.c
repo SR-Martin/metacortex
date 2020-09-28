@@ -84,8 +84,6 @@ Nucleotide coverage_walk_get_best_label(dBNode* node, Orientation orientation, d
 {
     Nucleotide label = Undefined;
     int highest_coverage = 0;
-    
-    uint32_t this_coverage = element_get_coverage_all_colours(node);
 
     void check_edge(Nucleotide nucleotide) {
         if (db_node_edge_exist_any_colour(node, nucleotide, orientation)) {

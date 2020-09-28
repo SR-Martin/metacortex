@@ -1481,7 +1481,7 @@ void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage
 {
     short kmer_size = path->kmer_size;
     int length = path->length;
-    int max_length = path->max_length;
+    //int max_length = path->max_length;
 
     // Sanity checking
     if (path == NULL) {
@@ -3737,7 +3737,7 @@ void write_path_GFA_nodes(Path* path, dBGraph* graph, gfa_file_wrapper* file_gfa
                             // write edge
                             int main_start = i + graph->kmer_size;
                             int main_end = join_pos + graph->kmer_size;
-                            fprintf(file_gfa->m_file, "E\tp%llds0_p%llds%i\tp%llds0+\tp%llds%i+\t%lu\t%lu\t0\t%lu$\t*\n",
+                            fprintf(file_gfa->m_file, "E\tp%llds0_p%llds%i\tp%llds0+\tp%llds%i+\t%i\t%i\t0\t%i$\t*\n",
                                 file_gfa->m_path_id, file_gfa->m_path_id, file_gfa->m_segment_count,
                                 file_gfa->m_path_id, file_gfa->m_path_id, file_gfa->m_segment_count,
                                     main_start, main_end, alt_path->length);   

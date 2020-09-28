@@ -55,7 +55,6 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
 {
     FILE* fp_contigs_fasta;
     int counter = 0;
-    int kmer_size = graph->kmer_size;
     int min_path_size = min_contig_size - graph->kmer_size;
     min_contig_size = min_contig_size > graph->kmer_size + 1 ? min_contig_size : graph->kmer_size + 1;
     
@@ -125,8 +124,7 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     }
                 }
                 int levels [simple_path->length];
-                float deltas [simple_path->length];
-                float gc_content [simple_path->length];
+                //float deltas [simple_path->length];
 
                 int current_level = 1;
                 levels[min_index] = current_level;
@@ -138,7 +136,7 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     int diff = cov - last_cov;
                     int denominator = cov > last_cov ? cov : last_cov;
                     float delta = (float)diff/denominator;
-                    deltas[i] = delta;
+                    //deltas[i] = delta;
                     if(delta > delta_coverage)
                     {
                         current_level++;
@@ -159,7 +157,7 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
                     int diff = cov - last_cov;
                     int denominator = cov > last_cov ? cov : last_cov;
                     float delta = (float)diff/denominator;
-                    deltas[i] = delta;
+                    //deltas[i] = delta;
                     if(delta > delta_coverage)
                     {
                         current_level++;

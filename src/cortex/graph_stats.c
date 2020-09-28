@@ -374,7 +374,7 @@ void find_subgraph_stats(dBGraph * graph, char* consensus_contigs_filename,
         log_and_screen_printf("CWD command returned NULL\n");
     }
 
-    char*  graph_wd = calloc(256, 1);
+    char*  graph_wd = NULL; 
 
     Path *simple_path = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
     Path *path_fwd = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
@@ -456,10 +456,15 @@ void find_subgraph_stats(dBGraph * graph, char* consensus_contigs_filename,
     if (basename(consensus_contigs_filename)==consensus_contigs_filename){
         log_and_screen_printf("(Relative path for contig output given, prefixing CWD)\n");
         // returns '.' which breaks other paths later on
+        int size = 8 + strlen(cwd);
+        graph_wd = calloc(size, sizeof(char));
         sprintf(graph_wd, "%s/graphs/", cwd);
     }
     else{
         // dirname modifies 'consensus_contigs_filename' on some platforms, shifted in here to avoid that
+        int size = 8 + strlen(dirname(consensus_contigs_filename));
+        graph_wd = calloc(size, sizeof(char));
+        
         sprintf(graph_wd, "%s/graphs/", dirname(consensus_contigs_filename));
         sprintf(analysis_filename, "%s%s.tex", graph_wd, basename(consensus_contigs_filename));
     }
@@ -468,6 +473,8 @@ void find_subgraph_stats(dBGraph * graph, char* consensus_contigs_filename,
 
     log_and_screen_printf("graphs dir\t%s\n", graph_wd);
     log_and_screen_printf("graphs\t%s\n", analysis_filename);
+    
+    free(graph_wd);
 
     /* Open the DIGEST file */
     fp_report = fopen(analysis_filename, "w");

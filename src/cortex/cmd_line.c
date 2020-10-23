@@ -238,16 +238,14 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
         {"hash_output_file", required_argument, NULL, 'O'},
         {"tip_clip_iterations", required_argument, NULL, 'P'},
         {"delta_coverage", required_argument, NULL, 'R'},  // using still available letters
-        {"graph_stats", no_argument, NULL, 'S'},
         {"threads", required_argument, NULL, 'T'},
-        {"subtractive_walk", no_argument, NULL, 'U'},
         {"graphviz", required_argument, NULL, 'V'},
         {"SW_delta", required_argument, NULL, 'W'},
         {0, 0, 0, 0}
     };
 
     while ((opt = getopt_long(argc, argv,
-                              "ab:c:d:ef:g:hi:jk:l:m:n:o:p:q:r:s:t:uvw:x:y:z:A:B:C:D:E:FGH:I:J:K:L:MN:O:P:R:STUV:W:Z:",
+                              "ab:c:d:ef:g:hi:jk:l:m:n:o:p:q:r:s:t:uvw:x:y:z:A:B:C:D:E:FGH:I:J:K:L:MN:O:P:R:TV:W:Z:",
                               long_options, &longopt_index)) > 0)
     {
         //Parse the default options
@@ -323,6 +321,10 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
                     errx(1,"[-g | --min_contig_length] option requires int argument");
                 }
                 cmd_line.min_contig_length = atoi(optarg);
+                if(cmd_line.min_contig_length < 0)
+                {
+                    errx(1,"[-g | --min_contig_length] option must be non-negative!");
+                }
                 break;
 
             case 'h':
@@ -370,7 +372,6 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
             case 'l':
                 if (optarg == NULL) {
                     errx(1, "[-l | --log_file] option requires a filename");
-                    exit(-1);
                 }
                 if (strlen(optarg) < LENGTH_FILENAME) {
                     cmd_line.output_log = true;
@@ -450,7 +451,6 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
             case 't':
                 if (optarg == NULL){
                     errx(1, "[-t  | --input_format binary | fasta | fastq | hash ] option requires a file type");
-                    exit(-1);
                 }
 
                 cmd_line.input_file_format_known=true;
@@ -506,11 +506,28 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
                 }
                 break;
 
-            case 'A':
-                errx(1,"[-A  | --algorithm ] option is not used for metacortex");
-                exit(-1);
+            case 'A':             
+                if(strcmp(optarg, "MCC") == 0)
+                {
+                    cmd_line.algorithm = METACORTEX_CONSENSUS;
+                }
+                else if(strcmp(optarg, "SW") == 0)
+                {
+                    cmd_line.algorithm = SUBTRACTIVE_WALK;
+                }
+                else if(strcmp(optarg, "PP") == 0)
+                {
+                    cmd_line.algorithm = PERFECT_PATH;
+                }
+                else if(strcmp(optarg, "GS") == 0)
+                {
+                    cmd_line.algorithm = GRAPH_STATS;
+                }
+                else
+                {
+                    errx(1, "[-A  | --algorithm  MCC | SW | PP | GS ] invalid option %s ]", optarg);
+                }
                 break;
-
 
             case 'C':
                 if (optarg == NULL) {
@@ -601,15 +618,7 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
                 cmd_line.delta_coverage = atoi(optarg);
                 cmd_line.delta_coverage=cmd_line.delta_coverage/100;
                 break;
-
-            case 'S':
-                //if (optarg != NULL) {
-                //  errx(1, "Called the stats option with an argument is not required. Exiting...\n");
-                //}
-                cmd_line.algorithm=GRAPH_STATS;
-                printf ("Getting stats, taking names...\n");
-                break;
-
+                
             case 'T':	//Number of threads
                 if (optarg == NULL) {
                     errx(1, "[-T | --threads INT] option requires int argumen");
@@ -624,13 +633,9 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
                     errx(1, "[-T | --threads INT] has to be a power of two. ");
                 }
                 break;
-            case 'U':
-                cmd_line.algorithm=SUBTRACTIVE_WALK;
-                break;
             case 'V':
                 if (optarg == NULL) {
                     errx(1, "[-G | --graphviz] option requires a filename [file of filenames]");
-                    exit(-1);
                 }
                 if (strlen(optarg) < LENGTH_FILENAME) {
                     strcpy(cmd_line.output_graphviz_filename, optarg);
@@ -643,7 +648,6 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
 			case 'H':
                	if (optarg == NULL) {
                    errx(1, "[-H | --input_reference ] option requires a filename [fasta file reference]");
-                   exit(-1);
                }
                if (strlen(optarg) < LENGTH_FILENAME) {
                    strcpy(cmd_line.input_reference, optarg);

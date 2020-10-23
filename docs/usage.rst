@@ -1,7 +1,8 @@
 Usage
 ==========
 
-If the dataset you are dealing with is small enough and/or you have enough memory and time, you don't need to create intermediate CTX files and can go from FASTQ to contigs in one step: ::
+If the dataset you are dealing with is small enough and/or you have enough memory and time, you don't need to create intermediate CTX files and can go from FASTQ to contigs in one step .. code-block:: bash
+
 	echo "file1.fastq" > allfiles.txt
 	echo "file2.fastq" >> allfiles.txt
 	echo "file3.fastq" >> allfiles.txt
@@ -14,13 +15,16 @@ Each time you run MetaCortex, you need to specify a `file of files', which is si
 +=========================+========================================================+
 | ``-k <int>``            | The kmer size to be used for the de Bruijn graph.      |
 +-------------------------+--------------------------------------------------------+
-| ``-n <int>``            |  The hash table width.                                 |
+| ``-n <int>``            | The hash table width.                                  |
 +-------------------------+--------------------------------------------------------+
-| ``-b <int>``            |  The hast table height.                                |
+| ``-b <int>``            | The hast table height.                                 |
 +-------------------------+--------------------------------------------------------+
-| ``-i <filename>``       |  The name of an input file of files.                   |
+| ``-i <filename>``       | The name of an input file of files.                    |
 +-------------------------+--------------------------------------------------------+
-| ``-t <input type>``     | Type of input, either binary, fastq or fasta.          |
+| ``-t <input type>``     | Type of input, either "binary", "fastq" or "fasta".    |
++-------------------------+--------------------------------------------------------+
+| ``-A <algorithm>``      | The graph traversal algorithm to use, must be one of   |
+|                         | "MCC"(default), "SW", "PP" or "GS".                    |
 +-------------------------+--------------------------------------------------------+
 
 Creating intermediate CTX files

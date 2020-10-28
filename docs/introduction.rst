@@ -16,8 +16,10 @@ Figure 1 illustrates the typical approach taken with MetaCortex, Reads are separ
 
 .. image:: images/flowchart.png
 
+
 Memory Usage
 ------------
+
 MetaCortex uses a hash table structure to store kmer information and the de Bruijn graph structure. You do not need to understand exactly how this structure works in order to use MetaCortex, but you do need to tell MetaCortex how much memory to set aside for the hash table. There are two parameters you need to specify - the hash table width, :math:`n`, and the hash table height, :math:`b`. The size of the hash table (the number of kmers that can be stored) is then given by 
 	.. math::
 		s = 2^{n}b. 
@@ -45,15 +47,25 @@ Algorithms
 
 MetaCortex has several graph traversal algorithms, which are chosen depending on the output the user wants. In this section, we describe the three main traversal algorithms.
 
-MetaCortex Consenus
--------------------
+MetaCortex Consenus (MCC)
+-------------------------
 
-This is the default traversal algorithms, and can be used to create GFA and FASTG output alongside traditional FASTA output...
+This is the default traversal algorithms, and can be used to create GFA and FASTG output alongside traditional FASTA output. For each node in the graph, the connected subgraph that contains this node is explored to find the node with largest coverage. From here, the graph is walked, taking the highest coverage branch in each case. The walk finishes when it reaches a tip, or the minimum coverage threshold is met. This path is written out as a contig to the fasta file.
 
-Subtractive Walk
-----------------
+If the ``-M`` option is specified, the nodes of this path are removed from the graph and the node traversal continues. If not, the whole connected subgraph that contained this path is removed, and the node traversal continues until all nodes have been visited.
 
-This algorithm assumes that reads are sequenced using a shotgun metagenomic sequencing approach, without amplification.
+Subtractive Walk (SW)
+---------------------
+
+This algorithm assumes that reads are sequenced using a shotgun metagenomic sequencing approach, without amplification. As in MCC, for each node in the graph, the connected subgraph that contains this node is explored to find the node with the largest coverage. However, to speed up the algorithm, there are limits to how many nodes will be explored. Then, as before, a path is found from the locally highest coverage node. This path is written out as a contig to the fasta file.
+
+Next, MetaCortex estimates the number of variants covering each node in the path. This is done by finding the highest coverage node in the path, and walking out in either direction, maintaining a normalised value :math:`\delta_n`, representing the difference in coverage between two nodes. We assume that the node with highest coverage has one variant coverage, and 
+	.. math::
+		\delta_n = \frac{(v_n - v_{n+1})}{\text{max}(v_n, v_{n+1})}
+		
+where :math:`v_n` and :math:`v_{n+1}` are coverage values for two adjacent nodes in the path. Then, if the this value is above the threshold :math:`\delta_{\text{min}}`, set by the ``-W`` parameter, the current count of the number of covering variants is incremented. If it is below :math:`-\delta_{\text{min}}` then the current count of the number of covering variants is decremented.
+
+Once the number of covering variants for each node in the path has been determined, those nodes with 1 covering variant are removed from the graph, and for all other nodes a value is subtracted from their coverage (keeping it positive). This value is determined by a linear interpolation from the two nearest 1-covering variant nodes. Then, the node traversal continues until all nodes with positive coverage have been visited.
 
 Perfect Path
 ------------

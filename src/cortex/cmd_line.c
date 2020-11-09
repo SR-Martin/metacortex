@@ -79,15 +79,18 @@ void usage(void)
     printf("\n" \
     "   [-h|--help] = This help screen.\n" \
     "   [-a|--remove_bubbles] = Removes the bubbles in the graph.\n"\
+    "   [-A|--algorithm ALG] = Traversal algorithm for contigs (MCC | SW | PP | GS).\n"
     "   [-b|--mem_width INT] = Size of hash table buckets (default 100).\n" \
     "   [-c|--tip_clip INT] = Clips the tips in the graph, the argument defines the max length for the tips.\n" \
     "   [-C|--high_confidence INT] = Only outputs contigs which have no nodes with coverage below THESHOLD.\n" \
     "   [-e|--output_coverages] = Print coverages for contigs/supernodes in a different file with _cov suffix.\n" \
     "   [-d|--ouput_contigs FILENAME] = Fasta file with all the contigs (after applying all specified actions on graph).\n" \
     "   [-f|--ouput_supernodes FILENAME] = Fasta file with all the supernodes (after applying all specified actions on graph).\n" \
-    "   [-g|--min_contig_length] = minimum contig length produced.\n" \
+    "   [-g|--min_contig_length INT] = minimum contig length produced.\n" \
+    "   [-G|--gfa] = Output gfa2 and fastg sequence files.\n"
     "   [-i|--input FILENAME] = File of filenames to be processed (start and end read is optional, format <filename>  <start read index>  <end read index> ).\n" \
     "   [-k|--kmer_size INT] = Kmer size (default 21), it has to be an odd number.\n" \
+    "   [-M|--multiple_subgraph_contigs] = Find multiple contigs for each disconnected subgraph during MCC.\n"
     "   [-n|--mem_height INT] = Number of buckets in hash table in bits (default 10, this is a power of 2, ie 2^mem_height).\n" \
     "   [-o|--dump_binary FILENAME] = Dump binary for graph in file (after applying all specified actions on graph).\n" \
     "   [-O|--hash_output_file ] = Dumps the whole graph into a file. Read with the input_format hash. The file stores the information required to restore the hash table, hence mem_height and mem_width don't have any effect."
@@ -96,6 +99,7 @@ void usage(void)
     "   [-q|--quality_score_threshold ] = The minimiun phred value for a base to be considered in an assembly.\n"\
     "   [-t|--input_format FORMAT] = File format for input (binary | fasta | fastq | hash ).\n" \
     "   [-u|--remove_seq_errors] = remove sequence of kmers induced by errors. Equivalent to --remove_low_coverage_kmers 1\n"\
+    "   [-W|--SW_delta FLOAT] = minimum normalised coverage difference for SW.\n"
     "   [-z|--remove_low_coverage_kmers INT] = Filter for kmers with coverage in the threshold or smaller.\n" \
     "   [-Z|--max_read_len] = Maximum read length over all input files.\n"\
     "\n");
@@ -178,10 +182,10 @@ int default_opts(CmdLine * c)
     //c->output_graphviz_filename required
     c->singleton_length = 100;
     c->algorithm = METACORTEX_CONSENSUS;
-	  c->max_length=200000;
+    c->max_length=200000;
     c->min_subgraph_size=0;
 
-	return 1;
+    return 1;
 }
 
 CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
@@ -544,13 +548,13 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
                cmd_line.gfa_and_fastg = true;
                break;
             case 'J':
-				cmd_line.output_kmer_coverage_know = true;
-	            if (strlen(optarg) < LENGTH_FILENAME) {
-	            	strcpy(cmd_line.output_kmer_coverage, optarg);
-	             } else {
-	                 errx(1, "[-J | --output_kmer_coverage] filename too long [%s]", optarg);
-	             }
-			     break;
+                cmd_line.output_kmer_coverage_know = true;
+                if (strlen(optarg) < LENGTH_FILENAME) {
+                    strcpy(cmd_line.output_kmer_coverage, optarg);
+                } else {
+                    errx(1, "[-J | --output_kmer_coverage] filename too long [%s]", optarg);
+                }
+                break;
 
             case 'L':
                 if (optarg == NULL) {
@@ -635,31 +639,31 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
                 break;
             case 'V':
                 if (optarg == NULL) {
-                    errx(1, "[-G | --graphviz] option requires a filename [file of filenames]");
+                    errx(1, "[-V | --graphviz] option requires a filename [file of filenames]");
                 }
                 if (strlen(optarg) < LENGTH_FILENAME) {
                     strcpy(cmd_line.output_graphviz_filename, optarg);
                 } else {
-                    errx(1, "[-G | --graphviz] filename too long [%s]", optarg);
+                    errx(1, "[-V | --graphviz] filename too long [%s]", optarg);
                 }
                 cmd_line.graphviz = true;
                 printf("Graphviz file: %s\n", optarg);
                 break;
-			case 'H':
+            case 'H':
                	if (optarg == NULL) {
                    errx(1, "[-H | --input_reference ] option requires a filename [fasta file reference]");
-               }
-               if (strlen(optarg) < LENGTH_FILENAME) {
-                   strcpy(cmd_line.input_reference, optarg);
-               } else {
-                   errx(1, "[-H | --input_reference] filename too long [%s]", optarg);
-               }
-               if (access(optarg, R_OK) == -1) {
-					errx(1,"[-H | --input_reference] filename [%s] cannot be accessed", optarg);
-               }
-               printf("Reference file: %s\n", optarg);
-			   cmd_line.input_reference_known = true;
-               break;
+                }
+                if (strlen(optarg) < LENGTH_FILENAME) {
+                    strcpy(cmd_line.input_reference, optarg);
+                } else {
+                    errx(1, "[-H | --input_reference] filename too long [%s]", optarg);
+                }
+                if (access(optarg, R_OK) == -1) {
+                                         errx(1,"[-H | --input_reference] filename [%s] cannot be accessed", optarg);
+                }
+                printf("Reference file: %s\n", optarg);
+                            cmd_line.input_reference_known = true;
+                break;
             case 'W':	//SW_delta
                 if (optarg == NULL) {
                     errx(1, "[-W | --SW_delta FLOAT] option requires float argument");

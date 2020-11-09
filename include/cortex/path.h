@@ -228,7 +228,7 @@ void path_increase_id(Path * path);
 
 void path_to_fasta(Path * path, FILE * fout);
 
-void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage, uint32_t min_coverage, uint32_t max_coverage);
+void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage, uint32_t min_coverage, uint32_t max_coverage, boolean print_stats);
 
 void path_to_fastg_gfa(Path * path, FILE * fout, FILE * fout2, HashTable* graph);
 

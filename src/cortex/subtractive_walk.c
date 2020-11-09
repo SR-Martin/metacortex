@@ -107,8 +107,8 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
 
                 if(simple_path->length > min_path_size)
                 {
-                    
-                    path_to_fasta(simple_path, fp_contigs_fasta);
+                    // don't print coverage statistics, as these will change as the algorithm proceeds.
+                    path_to_fasta_with_statistics(simple_path, fp_contigs_fasta, 0, 0, 0, false);
                 }
                     
                 uint32_t min_cov = element_get_coverage_all_colours(seed_node);

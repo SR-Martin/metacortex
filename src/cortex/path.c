@@ -1477,7 +1477,7 @@ void path_to_fastg_gfa(Path * path, FILE * file_fastg, FILE * file_gfa, HashTabl
     destroy_gfa_stats(gfa_count);
 }
 
-void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage, uint32_t min_coverage, uint32_t max_coverage)
+void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage, uint32_t min_coverage, uint32_t max_coverage, boolean print_stats)
 {
     short kmer_size = path->kmer_size;
     int length = path->length;
@@ -1577,18 +1577,27 @@ void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage
     }
 
     // Output to file
-    fprintf(fout,
-            ">%s length:%i average_coverage:%.2f min_coverage:%u max_coverage:%u fst_coverage:%u fst_r:%s fst_f:%s lst_coverage:%u lst_r:%s lst_f:%s\n",
-            path_id,
-            (flags_check_for_flag(PRINT_FIRST, &(path->flags)) ? length + kmer_size : length + kmer_size - 1), avg_coverage,
-            min_coverage,
-            max_coverage,
-            element_get_coverage_all_colours(fst_node),
-            (fst_orientation == forward ? fst_r : fst_f),
-            (fst_orientation == forward ? fst_f : fst_r),
-            element_get_coverage_all_colours(lst_node),
-            (lst_orientation == forward ? lst_r : lst_f),
-            (lst_orientation == forward ? lst_f : lst_r));
+    length = flags_check_for_flag(PRINT_FIRST, &(path->flags)) ? length + kmer_size : length + kmer_size - 1;
+    if(print_stats)
+    {
+        fprintf(fout,
+                ">%s length:%i average_coverage:%.2f min_coverage:%u max_coverage:%u fst_coverage:%u fst_r:%s fst_f:%s lst_coverage:%u lst_r:%s lst_f:%s\n",
+                path_id,
+                length, 
+                avg_coverage,
+                min_coverage,
+                max_coverage,
+                element_get_coverage_all_colours(fst_node),
+                (fst_orientation == forward ? fst_r : fst_f),
+                (fst_orientation == forward ? fst_f : fst_r),
+                element_get_coverage_all_colours(lst_node),
+                (lst_orientation == forward ? lst_r : lst_f),
+                (lst_orientation == forward ? lst_f : lst_r));
+    }
+    else
+    {
+        fprintf(fout, ">%s length:%i\n", path_id, length);
+    }
 
     binary_kmer_to_seq(&fst_kmer, flags_check_for_flag(PRINT_FIRST,	&(path->flags)) ? kmer_size : kmer_size - 1, fst_seq);
     
@@ -1627,7 +1636,7 @@ void path_to_fasta(Path * path, FILE * fout)
     uint32_t min_coverage;
     uint32_t max_coverage;
     path_get_statistics(&avg_coverage, &min_coverage, &max_coverage, path);
-    path_to_fasta_with_statistics(path, fout, avg_coverage, min_coverage, max_coverage);
+    path_to_fasta_with_statistics(path, fout, avg_coverage, min_coverage, max_coverage, true);
 }
 
 // Cloned from path_to_fasta with changes for file colour coding

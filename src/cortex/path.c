@@ -128,7 +128,6 @@ Path *path_new(int max_length, short kmer_size)
     //	path->depth = -1;
     path->header = 0;
     path->used = false;
-    path->subpath_id = 0;
 
     if ((!path->nodes) || (!path->orientations) || (!path->labels) || (!path->seq)) {
         free(path);
@@ -1566,23 +1565,13 @@ void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage
     }
     binary_kmer_to_seq(&lst_kmer, kmer_size, lst_seq);
     
-    char* path_id;
-    if(path->subpath_id == 0)
-    {
-        asprintf(&path_id, "node_%qd", path->id);
-    }
-    else
-    {
-        asprintf(&path_id, "node_%qd.%hi", path->id, path->subpath_id);
-    }
-
     // Output to file
     length = flags_check_for_flag(PRINT_FIRST, &(path->flags)) ? length + kmer_size : length + kmer_size - 1;
     if(print_stats)
     {
         fprintf(fout,
-                ">%s length:%i average_coverage:%.2f min_coverage:%u max_coverage:%u fst_coverage:%u fst_r:%s fst_f:%s lst_coverage:%u lst_r:%s lst_f:%s\n",
-                path_id,
+                ">node_%qd length:%i average_coverage:%.2f min_coverage:%u max_coverage:%u fst_coverage:%u fst_r:%s fst_f:%s lst_coverage:%u lst_r:%s lst_f:%s\n",
+                path->id,
                 length, 
                 avg_coverage,
                 min_coverage,
@@ -1592,19 +1581,17 @@ void path_to_fasta_with_statistics(Path * path, FILE * fout, double avg_coverage
                 (fst_orientation == forward ? fst_f : fst_r),
                 element_get_coverage_all_colours(lst_node),
                 (lst_orientation == forward ? lst_r : lst_f),
-                (lst_orientation == forward ? lst_f : lst_r));
+                (lst_orientation == forward ? lst_f : lst_r)
+        );
     }
     else
     {
-        fprintf(fout, ">%s length:%i\n", path_id, length);
+        fprintf(fout, ">node_%qd length:%i\n", path->id, length);
     }
 
     binary_kmer_to_seq(&fst_kmer, flags_check_for_flag(PRINT_FIRST,	&(path->flags)) ? kmer_size : kmer_size - 1, fst_seq);
-    
-    free(path_id);
-    
+       
     int i, current= 1;
-
     for(i = 0, current = 1 ; i < path->kmer_size; i++, current++) {
         fprintf(fout, "%c", fst_seq[i]);
         if(current % PATH_FASTA_LINE == 0) {
@@ -3597,55 +3584,6 @@ out_struct write_paths_between_nodes(  Path* path,
         
         return out;
     }
-}
-
-PathArray* path_split_at_min_coverages(Path* path, int min_coverage)
-{
-    assert(path != NULL);
-    assert(path_get_length(path) > 0);
-    PathArray* pa = path_array_new(2);
-    
-    int start = -1;
-    short subpath_id = 1;
-    for(int i = 0; i < path->length; ++i)
-    {
-        dBNode* current_node = path->nodes[i];
-        uint32_t current_coverage = element_get_coverage_all_colours(current_node);
-        
-        if(start < 0 && current_coverage >= min_coverage)
-        {
-            start = i;
-        }
-        else if(current_coverage < min_coverage)
-        {
-            if(start >= 0)
-            {
-                int length = i - start;
-                if(length > 1)
-                {
-                    Path* new_subpath = path_new(length, path->kmer_size);
-                    new_subpath->id = path->id;
-                    new_subpath->subpath_id = subpath_id++;
-                    path_copy_subpath(new_subpath, path, start, i);
-                    path_array_add_path(new_subpath, pa);
-                }
-            }
-            start = -1;                  
-        }
-    }
-    
-    // add the last path
-    if(start > 0 && start < path->length)
-    {
-        int length = path->length - start;
-        Path* new_subpath = path_new(length, path->kmer_size);
-        new_subpath->id = path->id;
-        new_subpath->subpath_id = subpath_id;
-        path_copy_subpath(new_subpath, path, start, path->length);
-        path_array_add_path(new_subpath, pa);
-    }
-    
-    return pa;
 }
 
 void path_to_GFA_sequence(Path* path, gfa_file_wrapper* file_gfa, boolean include_first_kmer)

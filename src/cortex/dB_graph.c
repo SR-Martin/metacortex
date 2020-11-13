@@ -1319,7 +1319,6 @@ pathStep get_path_to_junction(pathStep* first_step, Path* new_path, dBGraph* db_
                 break;
             }
             flags_action_set_flag(VISITED_FORWARD, &current_node->flags);
-            queue_push(node_queue, current_node);
         }
         else
         {
@@ -1333,9 +1332,8 @@ pathStep get_path_to_junction(pathStep* first_step, Path* new_path, dBGraph* db_
                 break;
             }
             flags_action_set_flag(VISITED_REVERSE, &current_node->flags);
-            queue_push(node_queue, current_node);
         }
-        
+        queue_push(node_queue, current_node);
                 
         if(num_edges == 0)
         {
@@ -1353,6 +1351,7 @@ pathStep get_path_to_junction(pathStep* first_step, Path* new_path, dBGraph* db_
         pathStep next_step;
         next_step.node = current_node;
         next_step.orientation = current_orientation;
+        next_step.label = Undefined;
         Edges edges = db_node_get_edges_for_orientation_all_colours(current_node, current_orientation);
         for(int n = 0; n < 4; n++) 
         {
@@ -1363,6 +1362,8 @@ pathStep get_path_to_junction(pathStep* first_step, Path* new_path, dBGraph* db_
             }
             edges >>= 1;
         }
+        
+        assert(next_step.label != Undefined);
   
         boolean added = path_add_node(&next_step, new_path);    
         if(!added)
@@ -1650,19 +1651,27 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
     
     int max_path_size = main_path->length;
     
-    // mark the path
+    // mark the main path from the first step
+    boolean mark = false;
     for(int i = 0; i < main_path->length; i++)
     {
-        if(main_path->orientations[i] == forward)
+        if(mark)
         {
-            flags_action_set_flag(CURRENT_PATH_FORWARD, &main_path->nodes[i]->flags);
+            if(main_path->orientations[i] == forward)
+            {
+                flags_action_set_flag(CURRENT_PATH_FORWARD, &main_path->nodes[i]->flags);
+            }
+            else
+            {
+                flags_action_set_flag(CURRENT_PATH_REVERSE, &main_path->nodes[i]->flags);
+            }
         }
-        else
+        if(main_path->nodes[i] == first_step->node)
         {
-            flags_action_set_flag(CURRENT_PATH_REVERSE, &main_path->nodes[i]->flags);
+            mark = true;
         }
     }
-    
+    assert(mark);
     // setup array etc.
     PathArray* path_array = path_array_new(2);
     Queue* step_queue = queue_new(200000, sizeof(pathStep*));
@@ -1713,7 +1722,9 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
         if(path_array->number_of_paths == 0 && removed)
         {
             // we removed all the paths from the array!
-            assert(false);
+            log_printf("[db_graph_search_for_bubble] Path array emptied. Step stack: %i.\n", step_queue->number_of_items);
+            free(next_step);
+            break;
         }
        
         Path* new_path = path_new(max_path_size, db_graph->kmer_size);
@@ -1781,12 +1792,13 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
             }      
         }
         
-        // sort via coverage so that we add the highest coverage first
+        // sort via coverage (highest first)
         qsort((void*)bcp_array, 4, sizeof(base_coverage_pair), compare);
 
         //TODO: Check that the total length of the path array isn't too big!
         boolean added = false;
-        for(int i = 0; i < 4; i++) 
+        // reverse iterate so that the smallest is added to the stack first
+        for(int i = 3; i >= 0; i--) 
         {
             if(bcp_array[i].coverage >= db_graph->path_coverage_minimum)
             {
@@ -1796,8 +1808,16 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
                 step_for_label->node = junction_node;
                 step_for_label->orientation = junction_orientation;
                 step_for_label->label = base;
-                queue_push_step(step_queue, step_for_label);
-                added = true;
+                if(queue_push_step(step_queue, step_for_label))
+                {
+                    added = true;
+                }
+                else
+                {
+                    log_printf("[db_graph_search_for_bubble] Warning: Could not add step to queue.\n");
+                    free(step_for_label);
+                    break;
+                }
             }
         }
 

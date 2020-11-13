@@ -481,7 +481,7 @@ int main(int argc, char **argv)
             case GRAPH_STATS:
                 // if --high_confidence option set by user, alter output name accordingly
                 if(cmd_line.high_confidence) {
-                    char temp[LENGTH_FILENAME];
+                    char temp[strlen(cmd_line.output_fasta_filename) + 1];
                     strcpy(temp, cmd_line.output_fasta_filename);
                     sprintf(cmd_line.output_fasta_filename, "%s.high_conf", temp);
                 }

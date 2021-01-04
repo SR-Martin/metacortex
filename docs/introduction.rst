@@ -70,4 +70,4 @@ Once the number of covering variants for each node in the path has been determin
 Perfect Path
 ------------
 
-This algorithm outputs "unitigs" - those paths in the de Bruijn graph where every inner vertex has degree two.
+This algorithm outputs "unitigs" - those paths in the de Bruijn graph where every inner vertex has in-degree one and out-degree one.

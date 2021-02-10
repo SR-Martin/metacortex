@@ -104,3 +104,6 @@ docs/_build/html/searchindex.js
 docs/_build/html/usage.html
 nbproject/private/tools/localhost/GNU/gcc-10
 docs/_build/html/_images/flowchart.png
+.cproject
+.project
+.settings/language.settings.xml

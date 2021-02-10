@@ -171,7 +171,7 @@ int grow_graph_from_node(dBNode* start_node, dBNode** best_node, dBGraph* graph,
         i++;
     }
 
-    queue_free(nodes_to_walk);
+    node_queue_free(nodes_to_walk);
 
     // If we didn't find a start node, presumably this is a singleton?
     if (*best_node == 0) {

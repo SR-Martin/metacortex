@@ -1610,7 +1610,7 @@ pathStep db_graph_search_for_bubble2(Path* main_path, pathStep* first_step, Path
         dBNode* queue_node = (dBNode*)queue_pop(node_queue_for_flags);
         db_node_action_unset_flag_visited_forward_reverse(queue_node);
     }
-    queue_free(node_queue_for_flags);
+    node_queue_free(node_queue_for_flags);
     
     // free all the paths
     for(int i = 0; i < parent_child_list->number_of_items; i++)
@@ -1620,6 +1620,7 @@ pathStep db_graph_search_for_bubble2(Path* main_path, pathStep* first_step, Path
         {
             path_destroy(pc->path);
         }
+        free(pc);
     }
     queue_free(parent_child_list);
     path_array_destroy(pa);
@@ -1874,6 +1875,11 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
     
     // free used memory
     path_array_destroy(path_array);
+    while(step_queue->number_of_items > 0)
+    {
+        pathStep* step = (pathStep*)queue_pop(step_queue);
+        free(step);
+    }
     queue_free(step_queue);
     
     // unmark the VISITED_FORWARD/REVERSE
@@ -1882,7 +1888,7 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
         dBNode* queue_node = (dBNode*)queue_pop(node_queue_for_flags);
         db_node_action_unset_flag_visited_forward_reverse(queue_node);
     }
-    queue_free(node_queue_for_flags);
+    node_queue_free(node_queue_for_flags);
     
     // unmark the path
     for(int i = 0; i < main_path->length; i++)

@@ -66,6 +66,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 #include "binary_kmer.h"
 #include "flags.h"
 #include "element.h"
@@ -92,7 +93,7 @@ Queue* queue_new(int n, size_t item_size)
         exit(1);
     }
 	q->number_of_items = 0;
-        q->warn_queue_full = false;
+    q->warn_queue_full = false;
 	return q;
 }
 
@@ -135,14 +136,6 @@ void* queue_pop(Queue* q)
 void queue_free(Queue *q)
 {
 	if (q) {
-		int i;
-		for (i=0; i<q->number_of_items; i++) {
-			QueueItem* qi = queue_pop(q);
-
-			if (qi) {
-			    free(qi);
-			}
-		}
 		if (q->items) {
 			free(q->items);
 		}
@@ -176,7 +169,18 @@ QueueItem* queue_push_node(Queue* q, dBNode* n, int d)
 	//binary_kmer_to_seq(&tmp, kmer_size, seq);
 	//printf("Pushing %s depth %d\n", seq, d);
 
-	return queue_push(q, item);
+	QueueItem* return_item = queue_push(q, item);
+	if(!return_item)
+	{
+		//item was not added to queue. Free it now or it's lost forever.
+		free(item);
+		return NULL;
+	}
+	else
+	{
+		assert(item == return_item);
+		return return_item;
+	}
 }
 
 dBNode* queue_pop_node(Queue* q, int* d)
@@ -198,6 +202,25 @@ dBNode* queue_pop_node(Queue* q, int* d)
 	}
 
 	return node;
+}
+
+void node_queue_free(Queue *q)
+{
+	if (q) {
+		int i;
+		for (i=0; i<q->number_of_items; i++) {
+			QueueItem* qi = queue_pop(q);
+
+			if (qi) {
+			    free(qi);
+			}
+		}
+		if (q->items) {
+			free(q->items);
+		}
+
+		free(q);
+	}
 }
 
 /*----------------------------------------------------------------------*

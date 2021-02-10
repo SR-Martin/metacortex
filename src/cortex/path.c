@@ -2482,15 +2482,15 @@ void path_action_unset_flag(Path * node, Flags f)
     flags_action_unset_flag(f, &(node->flags));
 }
 
-Flags path_get_flags(Path * node, Flags f)
-{
-    return node->flags & f;
-}
-
 boolean path_check_for_flag(Path * node, Flags flag)
 {
     return flags_check_for_flag(flag, &(node->flags));
 
+}
+
+Flags path_get_flags(Path * node, Flags f)
+{
+    return node->flags & f;
 }
 
 boolean path_check_for_any_flag(Path * path, Flags flag)

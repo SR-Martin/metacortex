@@ -39,6 +39,7 @@ void queue_free(Queue *q);
 Queue* node_queue_new(int n);
 QueueItem* queue_push_node(Queue* q, dBNode* n, int d);
 dBNode* queue_pop_node(Queue* q, int* d);
+void node_queue_free(Queue *q);
 
 /*----------------------------------------------------------------------*
  * Queue wrappers for pathSteps                                         *

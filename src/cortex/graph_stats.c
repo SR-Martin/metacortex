@@ -339,7 +339,7 @@ int grow_graph_from_node_stats(dBNode* start_node, dBNode** best_node, dBGraph* 
         nucleotide_iterator(&walk_if_exists);
     }
 
-    queue_free(nodes_to_walk);
+    node_queue_free(nodes_to_walk);
 
     return 0;
 }
@@ -1088,7 +1088,7 @@ int explore_subgraphs(dBNode* start_node, dBGraph* graph, GraphInfo* nodes_in_gr
         nucleotide_iterator(&walk_if_exists);
     }
 
-    queue_free(nodes_to_walk);
+    node_queue_free(nodes_to_walk);
 
     return 0;
 }

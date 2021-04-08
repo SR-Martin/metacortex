@@ -222,18 +222,29 @@ int main(int argc, char **argv)
         kmer_size = cmd_line.kmer_size;
        // DEBUG = cmd_line.verbose;
 
+        int bucket_size = cmd_line.bucket_size;
         timestamp();
+        if(cmd_line.hashtable_max_mem > 0)
+        {
+        	log_and_screen_printf("\nUsing --max_db_mem %llu and -n %i to create hashtable...\n", cmd_line.hashtable_max_mem, cmd_line.number_of_buckets_bits);
+        	log_and_screen_printf("Ignoring -b if defined.\n");
+        	int size_of_kmer = 16 + 8 * (cmd_line.kmer_size / 32);
+        	fflush(stdout);
+        	//TODO Check this works.
+        	bucket_size = (cmd_line.hashtable_max_mem / size_of_kmer) / (1 << cmd_line.number_of_buckets_bits);
+        	log_and_screen_printf("Bucket size calculated as : %i\n", bucket_size);
+        }
         log_and_screen_printf("\nInput file of filenames: %s\n", cmd_line.input_filename);
-        log_and_screen_printf("Kmer size: %'d Hash table size (%'d bits): %'d Hash table bucket size: %'d Total size: %'qd\n",
+        log_and_screen_printf("Kmer size: %'d, Hash table size (%'d bits): %'d, Hash table bucket size: %'d Total size: %'qd\n",
                               cmd_line.kmer_size,
-                              cmd_line.number_of_buckets_bits,
+							  cmd_line.number_of_buckets_bits,
                               1 << cmd_line.number_of_buckets_bits,
-                              cmd_line.bucket_size,
-                              ((long long)1 << cmd_line.number_of_buckets_bits) * cmd_line.bucket_size);
+                              bucket_size,
+                              ((long long)1 << cmd_line.number_of_buckets_bits) * bucket_size);
         fflush(stdout);
 
         //Create the de Bruijn graph/hash table
-        db_graph = hash_table_new(cmd_line.number_of_buckets_bits, cmd_line.bucket_size, 25, cmd_line.kmer_size);
+        db_graph = hash_table_new(cmd_line.number_of_buckets_bits, bucket_size, 25, cmd_line.kmer_size);
 
         if (db_graph == NULL) {
             printf("Please free up memory and re-run.\n");
@@ -455,8 +466,10 @@ int main(int argc, char **argv)
                 fflush(stdout);
 
                 perfect_path_print_paths(cmd_line.output_fasta_filename,
-                                         cmd_line.max_length, cmd_line.singleton_length,
+                                         cmd_line.max_length,
+										 cmd_line.singleton_length,
                                          cmd_line.output_coverages,
+										 cmd_line.min_contig_length,
                                          db_graph);
 
                 break;

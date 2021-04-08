@@ -59,6 +59,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 #include <limits.h>
 #include <getopt.h>
 #include <cmd_line.h>
@@ -102,6 +103,7 @@ void usage(void)
     "   [-W|--SW_delta FLOAT] = minimum normalised coverage difference for SW.\n"
     "   [-z|--remove_low_coverage_kmers INT] = Filter for kmers with coverage in the threshold or smaller.\n" \
     "   [-Z|--max_read_len] = Maximum read length over all input files.\n"\
+	"	[--max_db_mem] = Maximum memory to be allocated for db-graph, in bytes or with K|M|G|T appended.\n"
     "\n");
     printf("\n");
 }
@@ -184,6 +186,7 @@ int default_opts(CmdLine * c)
     c->algorithm = METACORTEX_CONSENSUS;
     c->max_length=200000;
     c->min_subgraph_size=0;
+    c->hashtable_max_mem = 0;
 
     return 1;
 }
@@ -203,7 +206,7 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
     default_opts(&cmd_line);
 
     int opt;
-    int longopt_index;
+    int longopt_index = 0;
 
     static struct option long_options[] = {
         {"remove_bubbles", no_argument, NULL, 'a'},
@@ -245,15 +248,34 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
         {"threads", required_argument, NULL, 'T'},
         {"graphviz", required_argument, NULL, 'V'},
         {"SW_delta", required_argument, NULL, 'W'},
+		{"max_db_mem", required_argument, NULL, 0},
         {0, 0, 0, 0}
     };
 
     while ((opt = getopt_long(argc, argv,
                               "ab:c:d:ef:g:hi:jk:l:m:n:o:p:q:r:s:t:uvw:x:y:z:A:B:C:D:E:FGH:I:J:K:L:MN:O:P:R:TV:W:Z:",
-                              long_options, &longopt_index)) > 0)
+                              long_options, &longopt_index)) >= 0)
     {
         //Parse the default options
         switch (opt) {
+        	case 0:
+        		if(strcmp(long_options[longopt_index].name, "max_db_mem") == 0)
+        		{
+					if (optarg)
+					{
+						unsigned long long hashtable_max_mem = parse_mem_string(optarg);
+						if(hashtable_max_mem == 0)
+						{
+							errx(1, "[--max_db_mem] Could not understand string %s \n Please use format <number><K/M/G/T>", optarg);
+						}
+						else
+						{
+							printf("Max DB size is %llu bytes\n", hashtable_max_mem);
+							cmd_line.hashtable_max_mem = hashtable_max_mem;
+						}
+					}
+        		}
+        		break;
             case 'a':
                 cmd_line.remove_bubbles = true;
                 break;
@@ -715,7 +737,7 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
 
     if (cmd_line.number_of_buckets_bits < 0) {
         printf("args error -b %i -h %i \n", cmd_line.bucket_size,cmd_line.number_of_buckets_bits);
-        errx(1, "memory configuration erorr - revise options -b -h and/or -m");
+        errx(1, "memory configuration error - revise options -b -n or --max_db_mem -b");
     }
 
     if(cmd_line.input_file_format == ROCHE){
@@ -730,4 +752,47 @@ CmdLine parse_cmdline(int argc, char *argv[], int unit_size)
     }
 
     return cmd_line;
+}
+
+unsigned long long parse_mem_string(char* mem_string)
+{
+	if(!isdigit(*mem_string))
+	{
+		return 0;
+	}
+	else
+	{
+		unsigned long long value;
+		char* end;
+		value = strtol(mem_string, &end, 10);
+		if(strlen(end) > 1)
+		{
+			return 0;
+		}
+		else
+		{
+			unsigned long long multiplier = 0;
+			if(strlen(end) == 0)
+			{
+				multiplier = 1;
+			}
+			else if(*end == 'K')
+			{
+				multiplier = 1000;
+			}
+			else if(*end == 'M')
+			{
+				multiplier = 1000 * 1000;
+			}
+			else if(*end == 'G')
+			{
+				multiplier = 1000 * 1000 * 1000;
+			}
+			else if(*end == 'T')
+			{
+				multiplier = 1000ul * 1000ul * 1000ul * 1000ul;
+			}
+			return value * multiplier;
+		}
+	}
 }

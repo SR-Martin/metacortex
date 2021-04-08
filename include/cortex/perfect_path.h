@@ -65,7 +65,7 @@
 /**
  * Given a dBGraph, print to a file all the   perfect paths
  */
-void perfect_path_print_paths(char * filename, int max_length, int singleton_length, boolean with_coverages, dBGraph * db_graph) ;
+void perfect_path_print_paths(char * filename, int max_length, int singleton_length, boolean with_coverages, int min_path_length, dBGraph * db_graph) ;
 
 /**
  * Given a dBGraph, print the supernode containing the given dBNode node

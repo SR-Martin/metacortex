@@ -463,6 +463,7 @@ typedef struct{
     FILE * fout;
     PathCounts  counts;
     long long count_nodes;
+    int min_path_length;
 } perfect_path_print_supernodes_args;
 
 static 	void print_supernode(dBNode * node, void * arg) {
@@ -485,7 +486,10 @@ static 	void print_supernode(dBNode * node, void * arg) {
                 path_to_coverage(args->path, args->fout_cov);
             }
             
-            path_to_fasta(args->path, args->fout);            
+            if (args->path->length > (args->min_path_length - args->db_graph->kmer_size))
+            {
+            	path_to_fasta(args->path, args->fout);
+            }
             
             path_counts_add(args->path, &args->counts);
             args->count_nodes++;
@@ -497,7 +501,7 @@ static 	void print_supernode(dBNode * node, void * arg) {
 }
 
 void perfect_path_print_paths(char *filename, int max_length, int singleton_length,
-							  boolean with_coverages, dBGraph * db_graph)
+							  boolean with_coverages, int min_path_length, dBGraph * db_graph)
 {
 	FILE * fout = NULL;
 	FILE * fout_cov = NULL;
@@ -522,6 +526,7 @@ void perfect_path_print_paths(char *filename, int max_length, int singleton_leng
         args[i]->path = path_new(max_length, db_graph->kmer_size);
         args[i]->fout = fout;
         args[i]->fout_cov = fout_cov;//TODO: Make the printing function "thread safe"
+        args[i]->min_path_length = min_path_length;
     }
   
 	//buffers = path_array_new(2);
@@ -529,8 +534,6 @@ void perfect_path_print_paths(char *filename, int max_length, int singleton_leng
 	
 	double graph_cov = db_graph_get_average_coverage(db_graph);
     log_and_screen_printf("Average coverage: %5.2f \n", graph_cov);
-    
-    
 	
 	hash_table_traverse_with_args(&print_supernode, (void ** ) args ,db_graph);
 	
@@ -540,8 +543,8 @@ void perfect_path_print_paths(char *filename, int max_length, int singleton_leng
     
     
 	for (i = 0; i < db_graph->number_of_threads; i++) {
+		path_destroy(args[i]->path);
         free(args[i]);
-        path_destroy(args[i]->path);
     }
     free(args);
 	

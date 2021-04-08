@@ -160,9 +160,13 @@ typedef struct
     int min_subgraph_size;
     int min_contig_length;
     TraverseAlgorithm algorithm;
+
+    unsigned long hashtable_max_mem;
+
 } CmdLine;
 
 CmdLine parse_cmdline( int argc, char* argv[],int unit_size);
 int default_opts(CmdLine *);
+unsigned long long parse_mem_string(char* mem_string);
 
 #endif /* CMD_LINE_H_ */

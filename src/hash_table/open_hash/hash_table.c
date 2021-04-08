@@ -103,6 +103,9 @@ HashTable * hash_table_new(int number_bits, int bucket_size, int max_rehash_trie
 	hash_table->bucket_size   = bucket_size;
 
 	//calloc is vital - we want to make sure initialised to zero
+	long long mem_requested = hash_table->number_buckets * hash_table->bucket_size * sizeof(Element);
+	log_and_screen_printf("Attempting to allocate memory for hash table of size %lli bytes\n", mem_requested);
+	log_and_screen_printf("Note: If memory overcommit is enabled and you request more memory than is available, MetaCortex may crash.\n");
 	hash_table->table = calloc(hash_table->number_buckets * hash_table->bucket_size, sizeof(Element));
 
 	if (hash_table->table == NULL) {
@@ -120,7 +123,7 @@ HashTable * hash_table_new(int number_bits, int bucket_size, int max_rehash_trie
 	hash_table->kmer_size      = kmer_size;
 	hash_table->number_of_threads = 1;
 
-	log_and_screen_printf("\nSize of db_graph: %li\n", (sizeof(HashTable) + (max_rehash_tries* sizeof(long long)) +  (hash_table->number_buckets * hash_table->bucket_size * sizeof(Element)) + (hash_table->number_buckets * sizeof(int))));
+	log_and_screen_printf("\nSize of db_graph: %li bytes\n", (sizeof(HashTable) + (max_rehash_tries* sizeof(long long)) +  (hash_table->number_buckets * hash_table->bucket_size * sizeof(Element)) + (hash_table->number_buckets * sizeof(int))));
 
 	return hash_table;
 }

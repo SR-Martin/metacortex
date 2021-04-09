@@ -1368,7 +1368,7 @@ pathStep get_path_to_junction(pathStep* first_step, Path* new_path, dBGraph* db_
         boolean added = path_add_node(&next_step, new_path);    
         if(!added)
         {
-            log_printf("[get_path_to_junction] Max path length reached, could not add node.\n");
+            log_printf("[get_path_to_junction] Warning: Max path length reached, could not add node. Consider increasing the length of this path.\n");
             return return_step;
         }
                   
@@ -1380,7 +1380,10 @@ pathStep get_path_to_junction(pathStep* first_step, Path* new_path, dBGraph* db_
     //log_printf("[get_path_to_junction] Returning junction node.\n");
     return_step.node = current_node;
     return_step.orientation = current_orientation;
-    path_add_node(&return_step, new_path);
+    if(!path_add_node(&return_step, new_path))
+    {
+    	log_printf("[get_path_to_junction]  Warning: Max path length reached, could not add node. Consider increasing the length of this path.\n");
+    }
     
     // mark as visited
     db_node_action_set_flag_visited_with_orientation(current_node, current_orientation);
@@ -1650,7 +1653,8 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
     uint32_t max_coverage;
     path_get_statistics(&avg_coverage, &min_coverage, &max_coverage, main_path);
     
-    int max_path_size = main_path->length;
+    //TODO: What should this be?
+    int max_path_size = 2 * main_path->length;
     
     // mark the main path from the first step
     boolean mark = false;
@@ -1752,6 +1756,10 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
         
         dBNode* junction_node = junction_step.node;
         Orientation junction_orientation = junction_step.orientation;
+        if(junction_node != new_path->nodes[new_path->length - 1])
+        {
+        	log_printf("[db_graph_search_for_bubble] Warning: Final node in path not equal to junction node.\n");
+        }
                 
         // Check to see if junction_node is back on the main path
         // if so, break from this loop
@@ -1848,6 +1856,7 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
                    (alt_path->orientations[i] == reverse && flags_check_for_flag(CURRENT_PATH_REVERSE, &(alt_path->nodes[i]->flags))) )
                 {
                     end = i;
+                    log_printf("[db_graph_search_for_bubble] Warning: Join node for alternative path found at node %i\n", end);
                     break;
                 }
             }
@@ -1868,6 +1877,7 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
             else
             {
                 log_printf("[db_graph_search_for_bubble] Warning: Found alternative path but could not find join. Ignoring...\n");
+                log_printf("[db_graph_search_for_bubble] Alternative path: %s\n", alt_path->seq);
             }
             path_destroy(alt_path);
         }

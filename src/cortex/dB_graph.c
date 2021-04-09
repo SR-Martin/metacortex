@@ -1518,7 +1518,7 @@ pathStep db_graph_search_for_bubble2(Path* main_path, pathStep* first_step, Path
                 {
                     if (!db_node_is_blunt_end_all_colours(end_node, end_orientation)) 
                     {
-                        if(element_get_coverage_all_colours(end_node) > db_graph->path_coverage_minimum)
+                        if(element_get_coverage_all_colours(end_node) >= db_graph->path_coverage_minimum)
                         {
                             pathStep* next_step = malloc(sizeof(pathStep));
                             next_step->node = end_node;

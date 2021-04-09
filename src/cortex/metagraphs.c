@@ -261,7 +261,7 @@ void metacortex_find_subgraphs(dBGraph* graph, char* consensus_contigs_filename,
             exit(-1);
         }
         uint32_t coverage = element_get_coverage_all_colours(node);
-        if (db_node_check_for_any_flag(node, PRUNED | VISITED) == false && coverage > graph->path_coverage_minimum) {
+        if (db_node_check_for_any_flag(node, PRUNED | VISITED) == false && coverage >= graph->path_coverage_minimum) {
             dBNode* seed_node;
             int nodes_in_graph;
 

@@ -3,12 +3,33 @@ Usage
 
 If the dataset you are dealing with is small enough and/or you have enough memory and time, you don't need to create intermediate CTX files and can go from FASTQ to contigs in one step::
 
-	echo "file1.fastq" > allfiles.txt
-	echo "file2.fastq" >> allfiles.txt
-	echo "file3.fastq" >> allfiles.txt
-	cortex_con_31 -k 31 -n 23 -b 65 -i allfiles.txt -t fastq -o all.ctx -f contigs.fa -g 100 -l log.txt
+	echo "file1.fastq" > allreads.txt
+	echo "file2.fastq" >> allreads.txt
+	echo "file3.fastq" >> allreads.txt
+	metacortex_31 -k 31 -n 23 -b 65 -i allreads.txt -t fastq -f contigs.fa -l log.txt
 
 Each time you run MetaCortex, you need to specify a `file of files', which is simply a plain text file that provides a list of the input files. In the above example, the first three lines create this file, then the second line invokes MetaCortex.
+
+To write out sequence graphs for the contigs::
+
+	echo "file1.fastq" > allreads.txt
+	echo "file2.fastq" >> allreads.txt
+	echo "file3.fastq" >> allreads.txt
+	metacortex_31 -k 31 -n 23 -b 65 -i allreads.txt -t fastq -f contigs.fa -l log.txt -A MCC -G
+
+To use the subtractive walk algorithm::
+
+	echo "file1.fastq" > allreads.txt
+	echo "file2.fastq" >> allreads.txt
+	echo "file3.fastq" >> allreads.txt
+	metacortex_31 -k 31 -n 23 -b 65 -i allreads.txt -t fastq -f contigs.fa -l log.txt -A SW
+
+To use th perfect path algorithm::
+
+	echo "file1.fastq" > allreads.txt
+	echo "file2.fastq" >> allreads.txt
+	echo "file3.fastq" >> allreads.txt
+	metacortex_31 -k 31 -n 23 -b 65 -i allreads.txt -t fastq -f contigs.fa -l log.txt -A PP
 
 Creating intermediate CTX files
 -------------------------------
@@ -47,6 +68,9 @@ Below is a list of options, split into input options, output options, and algori
 +----------------------------+--------------------------------------------------------+
 | ``-b <int>``               | The hast table height.                                 |
 +----------------------------+--------------------------------------------------------+
+| ``--max-db-mem <int>``     | Max memory to use for hash table. Can specify K/M/G/T  |
+|                            | e.g. "8G"                                              |
++----------------------------+--------------------------------------------------------+
 | ``-i <filename>``          | The name of an input file of files.                    |
 +----------------------------+--------------------------------------------------------+
 | ``-t <input type>``        | Type of input, either "binary", "fastq" or "fasta".    |
@@ -75,8 +99,8 @@ Below is a list of options, split into input options, output options, and algori
 +----------------------------+--------------------------------------------------------+
 | ``-g <min contig length>`` | Minimum contig length to output. Default 1.            |
 +----------------------------+--------------------------------------------------------+
-| ``-C <min path coverage>`` | Minimum value for coverage along paths. Default 1.     |
+| ``-C <min path coverage>`` | Minimum value for coverage along paths. Default 2.     |
 +----------------------------+--------------------------------------------------------+
 | ``-W <SW_delta>``          | Value to use as delta in algorithm SW. Must be between |
-|                            | 0 and 1 (default 0.8).                                 |
+|                            | 0 and 1. Default 0.8.                                  |
 +----------------------------+--------------------------------------------------------+ 

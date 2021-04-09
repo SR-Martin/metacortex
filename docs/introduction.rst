@@ -37,6 +37,10 @@ This needs to be multiplied by the hash table entry size to find the total memor
 | 25 |100 | 3,355,443,200    | 51.2 Gb       | 76.8 Gb       | 102.4 Gb      |
 +----+----+------------------+---------------+---------------+---------------+
 
+Alternatively, you can use the ``--max-db-mem`` option. When this is specified, MetaCortex will calculate the hash table size to not exceed this. If the width is also specified, then the height is calculated as the largest value that does not exceed the value specified by the user.  If the width is not specified, then a default value of 10 is used and the height is calculated accordingly.
+
+Note that on Linux systems, memory overcommit will allow the allocation of memory for hashtables that are larger than the amount of memory available. If you specify a size for the hashtable that uses more memory than is available, MetaCortex is likely to crash.
+
 Cleaning options
 ----------------
 
@@ -52,7 +56,7 @@ MetaCortex Consenus (MCC)
 
 This is the default traversal algorithms, and can be used to create GFA and FASTG output alongside traditional FASTA output. For each node in the graph, the connected subgraph that contains this node is explored to find the node with largest coverage. From here, the graph is walked, taking the highest coverage branch in each case. The walk finishes when it reaches a tip, or the minimum coverage threshold is met. This path is written out as a contig to the fasta file.
 
-If the ``-M`` option is specified, the nodes of this path are removed from the graph and the node traversal continues. If not, the whole connected subgraph that contained this path is removed, and the node traversal continues until all nodes have been visited.
+If the ``-M`` option is specified, the nodes of this path are removed from the graph and the node traversal continues (i.e. the paths corresponding to the contigs form a vertex-disjoint path cover of the de Bruijn graph). If not, the whole connected subgraph that contained this path is removed, and the node traversal continues until all nodes have been visited.
 
 Subtractive Walk (SW)
 ---------------------
@@ -61,13 +65,21 @@ This algorithm assumes that reads are sequenced using a shotgun metagenomic sequ
 
 Next, MetaCortex estimates the number of variants covering each node in the path. This is done by finding the highest coverage node in the path, and walking out in either direction, maintaining a normalised value :math:`\delta_n`, representing the difference in coverage between two nodes. We assume that the node with highest coverage has one variant coverage, and 
 	.. math::
-		\delta_n = \frac{(v_n - v_{n+1})}{\text{max}(v_n, v_{n+1})}
+		\delta_n = \frac{(c_n - c_{n+1})}{\text{max}(c_n, c_{n+1})}
 		
-where :math:`v_n` and :math:`v_{n+1}` are coverage values for two adjacent nodes in the path. Then, if the this value is above the threshold :math:`\delta_{\text{min}}`, set by the ``-W`` parameter, the current count of the number of covering variants is incremented. If it is below :math:`-\delta_{\text{min}}` then the current count of the number of covering variants is decremented.
+where :math:`c_n` and :math:`c_{n+1}` are coverage values for two adjacent nodes in the path. Then, if the this value is above the threshold :math:`\delta_{\text{min}}`, set by the ``-W`` parameter, the current count of the number of covering variants is incremented. If it is below :math:`-\delta_{\text{min}}` then the current count of the number of covering variants is decremented.
 
-Once the number of covering variants for each node in the path has been determined, those nodes with 1 covering variant are removed from the graph, and for all other nodes a value is subtracted from their coverage (keeping it positive). This value is determined by a linear interpolation from the two nearest 1-covering variant nodes. Then, the node traversal continues until all nodes with positive coverage have been visited.
+Once the number of covering variants for each node in the path has been determined, those nodes with 1 covering variant are removed from the graph, and for all other nodes a value is subtracted from their coverage (keeping it positive). This value is determined by a linear interpolation from the two nearest 1-covering variant nodes. Then, the node traversal continues until all nodes with positive coverage have been visited. The paths corresponding to the contigs form a path cover of the de Bruijn graph.
 
 Perfect Path
 ------------
 
-This algorithm outputs "unitigs" - those paths in the de Bruijn graph where every inner vertex has in-degree one and out-degree one.
+This algorithm outputs "unitigs" - those paths in the de Bruijn graph where every inner vertex has in-degree one and out-degree one. The paths corresponding to these form a safe vertex-disjoint path cover of the de Bruijn graph.
+
+Sequence Graphs
+===============
+
+If the MCC algorithm is used, the user can choose to output sequence graph files in GFA and fastg formats by specifying the ``-G`` option. These graphs capture the local variation along the contigs found by the MCC algorithm, in the following way. For each  contig output by the MCC algorithm, the corresponding path in the de Bruijn graph is traversed. At each node with outdegree > 1, the route(s) not taken by the contig's path is(are) explored, depth first, by choosing the nodes with the highest coverage. If a node that is part of the original path is encountered (i.e. a bubble is found in the graph) then this is written to the sequence graph.
+
+If the ``-M`` option is specified, then paths that form bubbles in the sequence graph will appear multiple times (at least once as the "secondary" bubble route in another path, and once as the "primary" path). For this reason, it is recommended that ``-M`` and ``-G`` are not used concurrently.
+

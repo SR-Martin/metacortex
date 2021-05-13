@@ -41,6 +41,14 @@ Alternatively, you can use the ``--max-db-mem`` option. When this is specified, 
 
 Note that on Linux systems, memory overcommit will allow the allocation of memory for hashtables that are larger than the amount of memory available. If you specify a size for the hashtable that uses more memory than is available, MetaCortex is likely to crash.
 
+If the size you specify is not large enough to load all the kmers from your read set, MetaCortex will print the following message to stdout::
+
+	WARNING: Max occupancy of hash table was reached. Some kmers may be missing. Consider re-running with increased hash table size.
+
+but will continue with assembly using the kmers that were loaded. When analysing the assembly, check that the all kmers from the read set were used.
+
+
+
 Cleaning options
 ----------------
 

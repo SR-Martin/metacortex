@@ -190,8 +190,6 @@ void metacortex_find_subgraphs(dBGraph* graph, char* consensus_contigs_filename,
     FILE* fp_contigs_fastg;
     FILE* fp_contigs_gfa;
     Queue* graph_queue;
-    //Path *path_fwd = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
-    //Path *path_rev = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
     Path *final_path = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
     char seq[256];
     char analysis_filename[256];
@@ -286,11 +284,9 @@ void metacortex_find_subgraphs(dBGraph* graph, char* consensus_contigs_filename,
                     int pi;
 
                     binary_kmer_to_seq(&(seed_node->kmer), graph->kmer_size, seq);
-                    coverage_walk_get_path(seed_node, forward, NULL, graph, final_path, true);
-                    //coverage_walk_get_path(seed_node, forward, NULL, graph, path_fwd, true);
-                    //coverage_walk_get_path(seed_node, reverse, NULL, graph, path_rev, true);
-                    //path_reverse(path_fwd, final_path);
-                    //path_append(final_path, path_rev);
+
+                    coverage_walk_get_path_forwards_and_backwards(seed_node, NULL, graph, final_path, true, MAX_EXPLORE_PATH_LENGTH/2);
+
                     final_path->id = counter;
                     if (final_path->length >= (min_contig_length - graph->kmer_size)) {
                         log_printf("Write path of size %d\n", final_path->length);
@@ -325,9 +321,7 @@ AND AFTER IT ON CURRENT PATH
                         }
                     }
 
-                    /* Reset paths */
-                    //path_reset(path_fwd);
-                    //path_reset(path_rev);
+                    /* Reset path */
                     path_reset(final_path);
                 } else {
                     log_printf("  Number of nodes (%i) too small. Not outputting contig.\n", nodes_in_graph);

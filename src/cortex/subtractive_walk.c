@@ -65,8 +65,6 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
     }
 
     Path *simple_path = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
-   // Path *path_fwd = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
-    //Path *path_rev = path_new(MAX_EXPLORE_PATH_LENGTH, graph->kmer_size);
 
 
    /* Open contigs file */
@@ -95,11 +93,8 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
             if(nodes_in_graph > min_path_size && seed_node)
             {
                 node = seed_node;
-                coverage_walk_get_path(node, forward, NULL, graph, simple_path, false);
-               // coverage_walk_get_path(node, reverse, NULL, graph, path_rev, false);
 
-               // path_reverse(path_fwd, simple_path);
-               // path_append(simple_path, path_rev);
+                coverage_walk_get_path_forwards_and_backwards(node, NULL, graph, simple_path, false, MAX_EXPLORE_PATH_LENGTH/2);
 
                 simple_path->id = counter++;
 
@@ -171,28 +166,6 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
 					last_cov = cov;
 				}
 
-
-				//debug hist
-				/*
-				if(simple_path->length > 100000)
-				{
-					char* filename;
-					asprintf(&filename, "node_%qd.hist", simple_path->id);
-					FILE* hist_file = fopen(filename, "w");
-					int last_coverage = 0;
-					for(int n = 0; n < simple_path->length; n++)
-					{
-						dBNode* current_node = simple_path->nodes[n];
-						Orientation current_orientation = simple_path->orientations[n];
-						uint32_t coverage = element_get_coverage_all_colours(current_node);
-						int num_edges = db_node_edges_count_all_colours(current_node, current_orientation);
-						fprintf(hist_file, "%u\t%f\t%i\t%i\n", coverage, deltas[n], levels[n], num_edges);
-						last_coverage = coverage;
-					}
-					fclose(hist_file);
-				}
-				*/
-
 				//Now subtract the coverages:
 				// level 1 -> 0
 				// all others get reduced by last min_cov;
@@ -246,10 +219,9 @@ void subtractive_walk(dBGraph * graph, char* consensus_contigs_filename, int min
 					}
                 }
              
-                /* Reset paths */
+                /* Reset path */
                 path_reset(simple_path);
-               // path_reset(path_fwd);
-                //path_reset(path_rev);
+
             }
             
             while (graph_queue->number_of_items > 0) 

@@ -50,28 +50,10 @@
  *----------------------------------------------------------------------*/
 static void coverage_walk_pre_step_action(pathStep * ps)
 {
-    if (ps->orientation == forward) {
-        db_node_action_set_flag(ps->node, VISITED_FORWARD);
-    } else {
-        db_node_action_set_flag(ps->node, VISITED_REVERSE);
-    }
+	// Nodes can only be visited *once* in *either* orientation now.
+	db_node_action_set_flag(ps->node, VISITED_FORWARD);
+	db_node_action_set_flag(ps->node, VISITED_REVERSE);
 
-}
-
-/*----------------------------------------------------------------------*
- * Function:                                                            *
- * Purpose:                                                             *
- * Params:                                                              *
- * Returns:                                                             *
- *----------------------------------------------------------------------*/
-static void coverage_walk_post_step_action(pathStep * ps)
-{
-
-    if (ps->orientation == forward) {
-        db_node_action_unset_flag(ps->node, VISITED_FORWARD);
-    } else {
-        db_node_action_unset_flag(ps->node, VISITED_REVERSE);
-    }
 }
 
 /*----------------------------------------------------------------------*
@@ -394,7 +376,6 @@ WalkingFunctions * coverage_walk_get_funtions(WalkingFunctions *walking_function
     // Which to over-rule?
     walking_functions->continue_traversing = &coverage_walk_continue_traversing;
     walking_functions->pre_step_action = &coverage_walk_pre_step_action;
-    walking_functions->post_step_action =&coverage_walk_post_step_action;
 
     return walking_functions;
 }
@@ -491,21 +472,20 @@ void coverage_walk_get_path_forwards_and_backwards(dBNode * node, void (*node_ac
     Path *path_fwd = path_new(explore_length, db_graph->kmer_size);
     Path *path_rev = path_new(explore_length, db_graph->kmer_size);
     
-    coverage_walk_get_path(node, forward, NULL, db_graph, path_fwd, true);
     // MAKE SURE POST-WALK FUNCTION DOES NOT RESET VISITED FLAGS
+    // AND THAT THIS FUNCTION DOES RESET VISITED FLAGS AFTER WALKS
+    coverage_walk_get_path(node, forward, NULL, db_graph, path_fwd, true);
     coverage_walk_get_path(node, reverse, NULL, db_graph, path_rev, true);
+
     path_reverse(path_fwd, path);
     path_append(path, path_rev);
-
-    log_printf("[coverage_walk_get_path_forwards_and_backwards] Forward path of length %i\n", path_fwd->length);
-    log_printf("[coverage_walk_get_path_forwards_and_backwards] Reverse path of length %i\n", path_rev->length);
 
     path_destroy(path_fwd);
     path_destroy(path_rev);
 
-    
     for(int i = 0; i < path->length; i++)
     {
-        db_node_action_unset_flag(path->nodes[i], path->orientations[i] == forward? VISITED_FORWARD:VISITED_REVERSE); 
+    	db_node_action_unset_flag(path->nodes[i], VISITED_FORWARD);
+    	db_node_action_unset_flag(path->nodes[i], VISITED_REVERSE);
     }
 }

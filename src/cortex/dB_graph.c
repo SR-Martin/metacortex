@@ -1856,7 +1856,7 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
                    (alt_path->orientations[i] == reverse && flags_check_for_flag(CURRENT_PATH_REVERSE, &(alt_path->nodes[i]->flags))) )
                 {
                     end = i;
-                    log_printf("[db_graph_search_for_bubble] Warning: Join node for alternative path found at node %i\n", end);
+                    //log_printf("[db_graph_search_for_bubble] Join node for alternative path found at node %i\n", end);
                     break;
                 }
             }

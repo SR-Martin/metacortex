@@ -3242,7 +3242,7 @@ out_struct write_paths_between_nodes(  Path* path,
                             }
                             if(!polymorphism)
                             {
-                                log_printf("[write_paths_between_nodes] Warning: Found alternate path but could not find join node. Ignoring...\n");
+                                //log_printf("[write_paths_between_nodes] Warning: Found alternate path but could not find join node. Ignoring...\n");
                                 if(subpaths[i].m_path)
                                 {
                                     path_destroy(subpaths[i].m_path);

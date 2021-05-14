@@ -1654,7 +1654,7 @@ pathStep db_graph_search_for_bubble(Path* main_path, pathStep* first_step, Path*
     path_get_statistics(&avg_coverage, &min_coverage, &max_coverage, main_path);
     
     //TODO: What should this be?
-    int max_path_size = 2 * main_path->length;
+    int max_path_size = main_path->length < 100? 100 : main_path->length /2;
     
     // mark the main path from the first step
     boolean mark = false;
